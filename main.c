@@ -1,8 +1,8 @@
 /****************************************************/
 /* File: main.c                                     */
-/* Main program for TINY compiler                   */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* main file for  C-- compiler                      */
+/* C-- Compiler Project				    */
+/* ZEBRA 	                                    */
 /****************************************************/
 
 #include "globals.h"

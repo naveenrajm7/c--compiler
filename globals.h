@@ -1,9 +1,9 @@
 /****************************************************/
 /* File: globals.h                                  */
-/* Global types and vars for TINY compiler          */
+/* Global types and vars for C-- compiler           */
 /* must come before other include files             */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* C-- Compiler Project				    */
+/* ZEBRA 	                                    */
 /****************************************************/
 
 #ifndef _GLOBALS_H_

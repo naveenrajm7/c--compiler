@@ -1,9 +1,10 @@
 /****************************************************/
 /* File: util.h                                     */
 /* Utility functions for the TINY compiler          */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* C-- Compiler Project				    */
+/* ZEBRA 	                                    */
 /****************************************************/
+
 
 #ifndef _UTIL_H_
 #define _UTIL_H_
