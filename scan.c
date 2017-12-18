@@ -157,7 +157,7 @@ TokenType getToken(void)
          break;
        case IND:
      
-         if (c == '*')
+         if ((c == '*')||(c=='/'))
          { state = INCOMMENT1;
            save=FALSE;
          }
@@ -213,6 +213,8 @@ TokenType getToken(void)
 	 save=FALSE;
 	 if(c=='*')
 	   state=INCOMMENT2;
+	 else if(c=='\n')
+	   state=START;  
 	 break;
        case INCOMMENT2:
 	 save=FALSE;
