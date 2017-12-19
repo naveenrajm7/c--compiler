@@ -4,13 +4,14 @@ int gcd (int u,int v)
 {
 	if(v==0) return u;
 	else if(v<=u) return gcd(v,u-u/v*v); 
-/* u-u/v*v == u mod v */
+/* u-u/v*v == u mod v
+hello */
 return x;
 }
 
 void main(void)
 {
-	int x,int y; // My single line comment
+	int x,int y; // /*/ My single line comment
 	if(v!=u);
 	x=input();y=input();
 	output(gcd(x,y));
