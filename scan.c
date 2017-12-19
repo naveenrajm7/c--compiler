@@ -77,7 +77,9 @@ static TokenType reservedLookup (char * s)
  * next token in source file
  */
 TokenType getToken(void)
-{  /* index for storing into tokenString */
+{  
+   int inCom=0;  /* inCom=0 single line comment inCom=1 multi-line comment */
+   /* index for storing into tokenString */
    int tokenStringIndex = 0;
    /* holds current token to be returned */
    TokenType currentToken;
@@ -157,8 +159,14 @@ TokenType getToken(void)
          break;
        case IND:
      
-         if ((c == '*')||(c=='/'))
+         if ((c == '*'))
          { state = INCOMMENT1;
+           inCom=1;
+           save=FALSE;
+         }
+         else if ((c == '/'))
+         { state = INCOMMENT1;
+           inCom=0;
            save=FALSE;
          }
          else
@@ -213,12 +221,12 @@ TokenType getToken(void)
 	 save=FALSE;
 	 if(c=='*')
 	   state=INCOMMENT2;
-	 else if(c=='\n')
+	 else if(c=='\n' && !inCom)
 	   state=START;  
 	 break;
        case INCOMMENT2:
 	 save=FALSE;
-	 if(c=='/')
+	 if(c=='/'&& inCom)
 	   state=START;
 	 else if(c=='*')
 	   state=INCOMMENT2;
