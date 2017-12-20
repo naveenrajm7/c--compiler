@@ -1,8 +1,8 @@
 /****************************************************/
 /* File: globals.h                                  */
-/* Global types and vars for C-- compiler           */
+/* Global types and vars for C- compiler            */
 /* must come before other include files             */
-/* C-- Compiler Project				    */
+/* C- Compiler Project				    */
 /* ZEBRA 	                                    */
 /****************************************************/
 
@@ -23,13 +23,13 @@
 #endif
 
 /* MAXRESERVED = the number of reserved words */
-#define MAXRESERVED 8
+#define MAXRESERVED 6
 
 typedef enum 
     /* book-keeping tokens */
    {ENDFILE,ERROR,
     /* reserved words */
-    IF,ELSE,INT,RETURN,VOID,WHILE,INPUT,OUTPUT,
+    IF,ELSE,INT,RETURN,VOID,WHILE,
     /* multicharacter tokens */
     ID,NUM,
     /* special symbols */
@@ -46,10 +46,10 @@ extern int lineno; /* source line number for listing */
 /***********   Syntax tree for parsing ************/
 /**************************************************/
 
-typedef enum {StmtK,ExpK} NodeKind;
-typedef enum {IfK,RepeatK,AssignK,ReadK,WriteK} StmtKind;
-typedef enum {OpK,ConstK,IdK} ExpKind;
-
+typedef enum {StmtK,ExpK,DecK} NodeKind;
+typedef enum {IfK,WhileK,CallK,ReturnK,CompoundK} StmtKind;
+typedef enum {OpK,ConstK,IdK,AssignK} ExpKind;
+typedef enum {VarK,ArrayK,FunK} DecKind;
 /* ExpType is used for type checking */
 typedef enum {Void,Integer,Boolean} ExpType;
 
@@ -60,10 +60,38 @@ typedef struct treeNode
      struct treeNode * sibling;
      int lineno;
      NodeKind nodekind;
-     union { StmtKind stmt; ExpKind exp;} kind;
+     union { StmtKind stmt; ExpKind exp;DecKind dec;} kind;
      union { TokenType op;
              int val;
              char * name; } attr;
+             
+     int value;        
+   /*
+     * If the node is a function definition, this holds the function's
+     *  return type.
+     */
+    ExpType    functionReturnType;
+
+    /*
+     *  If the node is a variable, then we need to record the data type.
+     */
+    ExpType    variableDataType;
+    
+    /*
+     * The following is used in the type checking of expressions
+     */
+    ExpType         expressionType;
+
+    /*
+     * If isParameter is TRUE, then this node declares an actual parameter
+     *   to a function.
+     */
+    int isParameter;
+
+    /* If isGlobal is TRUE, then the variable is a global */
+    int isGlobal;
+                 
+             
      ExpType type; /* for type checking of exps */
    } TreeNode;
 
