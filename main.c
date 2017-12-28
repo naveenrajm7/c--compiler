@@ -31,6 +31,7 @@
 #endif
 /* allocate global variables */
 int lineno = 0;
+int HighScope=0;
 FILE * source;
 FILE * listing;
 FILE * code;
@@ -77,9 +78,12 @@ int main( int argc, char * argv[] )
     typeCheck(syntaxTree);
     if (TraceAnalyze) fprintf(listing,"\nType Checking Finished\n");
   }
+  
+ 
 #if !NO_CODE
   if (! Error)
-  { char * codefile;
+  { 
+    char * codefile;
     int fnlen = strcspn(pgm,".");
     codefile = (char *) calloc(fnlen+4, sizeof(char));
     strncpy(codefile,pgm,fnlen);
@@ -90,6 +94,8 @@ int main( int argc, char * argv[] )
       exit(1);
     }
     codeGen(syntaxTree,codefile);
+    if (TraceCode) 
+    fprintf(listing,"\nCode generated in file %s\n",codefile);
     fclose(code);
   }
 #endif

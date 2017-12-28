@@ -35,6 +35,9 @@ static TreeNode *args(void);
 static TreeNode *arg_list(void);
 static TreeNode *var_call(void);
 
+
+static int global_size=0;
+
 static void syntaxError(char * message)
 { fprintf(listing,"\n>>> ");
   fprintf(listing,"Syntax error at line %d: %s",lineno,message);
@@ -94,6 +97,9 @@ static TreeNode *declaration_list(void)
             }
 	}
     }
+    
+    if(t->kind.dec!=FunK)
+    	t->param_size=global_size;    
 
     return t;
 }
@@ -123,6 +129,8 @@ static TreeNode *declaration(void)
 	{
 	    t->type = decType;
 	    t->attr.name = identifier;
+	    global_size++;
+	    
 	}
 	
 	match(SEMI);
@@ -141,7 +149,9 @@ static TreeNode *declaration(void)
 	
 	if (t != NULL) {
 		t->value = atoi(tokenString);
+		global_size=global_size+(t->value);
 		t->isArray=TRUE;
+		t->isGlobal=TRUE;
 	}
 	match(NUM);
 	match(RB);
@@ -199,6 +209,7 @@ static TreeNode *var_declaration(void)
 	{
 	    t->type = decType;
 	    t->attr.name = identifier;
+	    t->local_size=1;
 	}
 	
 	match(SEMI);
@@ -217,6 +228,7 @@ static TreeNode *var_declaration(void)
 	
 	if (t != NULL) {
 		t->value = atoi(tokenString);
+		t->local_size=t->value;
 		t->isArray=TRUE;
 	}
 	match(NUM);
@@ -330,6 +342,7 @@ static TreeNode *local_declarations(void)
     TreeNode *t;
     TreeNode *p;
     TreeNode *q;
+    TreeNode *temp;
     int local_var=0;
     /* find first variable declaration, if it exists */
     if ( (token==INT )|| (token==VOID))
@@ -338,7 +351,6 @@ static TreeNode *local_declarations(void)
     /* subsequent variable declarations */
     if (t != NULL)
     {
-        local_var++;
 	p = t;
 
 	while (( (token==INT )|| (token==VOID)))
@@ -346,12 +358,16 @@ static TreeNode *local_declarations(void)
 	    q = var_declaration();
 	    if (q != NULL)
 	    {
-	        local_var++;
 		p->sibling = q;
 		p = q;
 	    }
 	}
     }
+    temp=t;
+    while(temp!=NULL){
+    	local_var=local_var+temp->local_size;
+    	temp=temp->sibling;
+    }	
     t->local_size=local_var;
     return t;
 }
@@ -528,16 +544,13 @@ static TreeNode *expression(void)
     {
         // fprintf(listing, ">>>   Parsing ident_statement\n");
         lvalue = var_call();
-      //  if(lvalue!=NULL)
-      //  printf("%d %s\n",lvalue->param_size,lvalue->attr.name);
         gotLvalue = TRUE;
     }
 
     /* Assignment? */
     if ((gotLvalue == TRUE) && (token == ASSIGN))
     {
-        if ((lvalue != NULL) && (lvalue->nodekind == ExpK) && 
-            (lvalue->kind.exp == IdK))
+        if ((lvalue != NULL) && ((lvalue->nodekind == ExpK) || (lvalue->nodekind == DecK)) && ((lvalue->kind.exp == IdK)||(lvalue->kind.dec == ArrayK)))
         {
            // fprintf(listing, ">>>   Generating node for ASSIGN\n"); 
             match(ASSIGN);
@@ -732,12 +745,16 @@ static TreeNode *var_call(void)
     {
         if (token == LB)
         {
+            tree=newDecNode(ArrayK);
+            tree->isArray=TRUE;
+            tree->type=Integer;
             match(LB);
             expr = expression(); 
             match(RB);
         }
 	/*variable */
-        tree = newExpNode(IdK);
+	else
+        	tree = newExpNode(IdK);
         if (tree != NULL)
         {
             tree->child[0] = expr;

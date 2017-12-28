@@ -12,6 +12,9 @@
 /* SIZE is the size of the hash table */
 #define SIZE 211
 
+/* MAX_SCOPE is maximum allowed scope can be changed for larger programs*/
+#define MAX_SCOPE 8
+
 /* the list of line numbers of the source 
  * code in which a variable is referenced
  */
@@ -42,7 +45,7 @@ typedef struct BucketListRec
 static struct ScopeList{
 
 	 BucketList hashTable[SIZE];
-} Scope[3];
+} Scope[MAX_SCOPE];
 
 
 /* Procedure st_insert inserts line numbers and
