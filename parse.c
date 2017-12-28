@@ -121,7 +121,7 @@ static TreeNode *declaration(void)
 
 	if (t != NULL)
 	{
-	    t->variableDataType = decType;
+	    t->type = decType;
 	    t->attr.name = identifier;
 	}
 	
@@ -133,14 +133,16 @@ static TreeNode *declaration(void)
 
 	if (t != NULL)
 	{
-	    t->variableDataType = decType;
+	    t->type = decType;
 	    t->attr.name = identifier;
 	}
 	
 	match(LB);
 	
-	if (t != NULL) t->value = atoi(tokenString);
-
+	if (t != NULL) {
+		t->value = atoi(tokenString);
+		t->isArray=TRUE;
+	}
 	match(NUM);
 	match(RB);
 	match(SEMI);
@@ -151,7 +153,8 @@ static TreeNode *declaration(void)
 
 	if (t != NULL)
 	{
-	    t->functionReturnType = decType;
+	   
+	    t->type = decType;
 	    t->attr.name = identifier;
 	}
 	
@@ -194,7 +197,7 @@ static TreeNode *var_declaration(void)
 
 	if (t != NULL)
 	{
-	    t->variableDataType = decType;
+	    t->type = decType;
 	    t->attr.name = identifier;
 	}
 	
@@ -206,14 +209,16 @@ static TreeNode *var_declaration(void)
 
 	if (t != NULL)
 	{
-	    t->variableDataType = decType;
+	    t->type = decType;
 	    t->attr.name = identifier;
 	}
 	
 	match(LB);
 	
-	if (t != NULL) t->value = atoi(tokenString);
-
+	if (t != NULL) {
+		t->value = atoi(tokenString);
+		t->isArray=TRUE;
+	}
 	match(NUM);
 	match(RB);
 	match(SEMI);
@@ -235,27 +240,28 @@ static TreeNode *param_list(void)
     TreeNode *t;
     TreeNode *p;
     TreeNode *q;
-
+    int param_count=0;
     if (token == VOID)
     {
         match(VOID);
-        return NULL;
+        return NULL;  /* No parameter ,VOID */
     }
 
     t = param();
     p = t;
-
+    param_count++;
     while ((t != NULL) && (token == COMMA))
     {
 	match(COMMA);
 	q = param();
 	if (q != NULL)
         {
+            param_count++;
 	    p->sibling = q;
 	    p = q;
         }
     }
-
+    t->param_size=param_count;
     return t;
 }
 
@@ -279,6 +285,7 @@ static TreeNode *param(void)
 	match(RB);
 
 	t = newDecNode(ArrayK);
+	t->isArray=TRUE;
     }
     else
 	t = newDecNode(VarK);
@@ -287,7 +294,7 @@ static TreeNode *param(void)
     {
 	t->attr.name = identifier;
 	t->value = 0;
-	t->variableDataType = parmType;
+	t->type = parmType;
 	t->isParameter = TRUE;
     }
     
@@ -323,7 +330,7 @@ static TreeNode *local_declarations(void)
     TreeNode *t;
     TreeNode *p;
     TreeNode *q;
-
+    int local_var=0;
     /* find first variable declaration, if it exists */
     if ( (token==INT )|| (token==VOID))
 	t = var_declaration();
@@ -331,6 +338,7 @@ static TreeNode *local_declarations(void)
     /* subsequent variable declarations */
     if (t != NULL)
     {
+        local_var++;
 	p = t;
 
 	while (( (token==INT )|| (token==VOID)))
@@ -338,12 +346,13 @@ static TreeNode *local_declarations(void)
 	    q = var_declaration();
 	    if (q != NULL)
 	    {
+	        local_var++;
 		p->sibling = q;
 		p = q;
 	    }
 	}
     }
-
+    t->local_size=local_var;
     return t;
 }
 
@@ -519,6 +528,8 @@ static TreeNode *expression(void)
     {
         // fprintf(listing, ">>>   Parsing ident_statement\n");
         lvalue = var_call();
+      //  if(lvalue!=NULL)
+      //  printf("%d %s\n",lvalue->param_size,lvalue->attr.name);
         gotLvalue = TRUE;
     }
 
@@ -547,7 +558,7 @@ static TreeNode *expression(void)
     }
     else
         tree = simple_expression(lvalue);
-
+	//if(lvalue!=NULL)printf("%d %s\n",lvalue->param_size,lvalue->attr.name);
     return tree;
 }
 
@@ -648,6 +659,7 @@ static TreeNode *factor(TreeNode *passdown)
     if (passdown != NULL)
     {
     //    fprintf(listing, ">>>   Returning passdown subtree\n"); 
+    //printf("%d this  %s\n",passdown->param_size,passdown->attr.name);
         return passdown;
     }
 
@@ -667,7 +679,7 @@ static TreeNode *factor(TreeNode *passdown)
         if (tree != NULL)
         {
             tree->attr.val = atoi(tokenString);
-            tree->variableDataType = Integer;
+            tree->type = Integer;
         }
         match(NUM);
     }
@@ -707,9 +719,15 @@ static TreeNode *var_call(void)
         if (tree != NULL)
         {
             tree->child[0] = arguments;
+            if(arguments!=NULL)
+            	tree->param_size=arguments->param_size;
+            else
+            	tree->param_size=0;	
             tree->attr.name = identifier;
+           // printf("%d %s\n",tree->param_size,tree->attr.name);
         }
     }
+    /*variable statement */
     else		/*Array variable*/
     {
         if (token == LB)
@@ -718,7 +736,7 @@ static TreeNode *var_call(void)
             expr = expression(); 
             match(RB);
         }
-
+	/*variable */
         tree = newExpNode(IdK);
         if (tree != NULL)
         {
@@ -734,9 +752,9 @@ static TreeNode *var_call(void)
 static TreeNode *args(void)
 {
     TreeNode *tree = NULL;
-
+	
    // fprintf(listing, "*** Entered args()\n");
-
+    //tree->param_size=0;
     if (token != RPAREN)	//follow(args)
         tree = arg_list();
 
@@ -749,24 +767,26 @@ static TreeNode *arg_list(void)
     TreeNode *tree;
     TreeNode *ptr;
     TreeNode *newNode;
-
+    int arg_count=0;
    // fprintf(listing, "*** Entered arg_list()\n"); 
 
     tree = expression();
     ptr = tree;
-
+    arg_count++;
     while (token == COMMA)
     {
         match(COMMA);
         newNode = expression();
-
+	arg_count++;
         if ((ptr != NULL) && (tree != NULL))
         {
+            
             ptr->sibling = newNode;
             ptr = newNode;
         }
     }
-
+    tree->param_size=arg_count;	
+	
     return tree;
 }
 

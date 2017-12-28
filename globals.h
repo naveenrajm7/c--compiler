@@ -65,24 +65,10 @@ typedef struct treeNode
              int val;
              char * name; } attr;
              
-     int value;        
-   /*
-     * If the node is a function definition, this holds the function's
-     *  return type.
-     */
-    ExpType    functionReturnType;
-
-    /*
-     *  If the node is a variable, then we need to record the data type.
-     */
-    ExpType    variableDataType;
-    
-    /*
-     * The following is used in the type checking of expressions
-     */
-    ExpType         expressionType;
-
-    /*
+     int value; /* array index */
+     
+     int isArray;       
+     /*
      * If isParameter is TRUE, then this node declares an actual parameter
      *   to a function.
      */
@@ -90,11 +76,19 @@ typedef struct treeNode
 
     /* If isGlobal is TRUE, then the variable is a global */
     int isGlobal;
-                 
-             
+    
+    /* parameter count and local variable count*/
+    int param_size;
+    
+    int local_size;
+    
+    /* scope of the node */
+    int scope;
      ExpType type; /* for type checking of exps */
    } TreeNode;
 
+
+#define MAX_SCOPE 3
 /**************************************************/
 /***********   Flags for tracing       ************/
 /**************************************************/
