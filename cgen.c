@@ -74,46 +74,31 @@ void emitGetAddr(TreeNode *var)
         }
         break;
     case 1:
-        if(var_lookup(var->attr.name,1)->isParam)
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+        if(var_lookup(var->attr.name,var->scope)->isParam)
         {
         	 if(var->isArray){
-          		emitRM("LD",bx,2+(st_lookup(var->attr.name,1)),bp,"get param array address");
+          		emitRM("LD",bx,2+(st_lookup(var->attr.name,var->scope)),bp,"get param array address");
        		 }
         	else
         	{
-          		emitRM("LDA",bx,2+(st_lookup(var->attr.name,1)),bp,"get param variable address");
+          		emitRM("LDA",bx,2+(st_lookup(var->attr.name,var->scope)),bp,"get param variable address");
         	}
         }
         else
         {
         	if(var->isArray ){
-         		 emitRM("LDA",bx,-(st_lookup(var->attr.name,1)),bp,"get local array address");
+         		 emitRM("LDA",bx,-(st_lookup(var->attr.name,var->scope)),bp,"get local array address");
         	}
         	else{
-          		emitRM("LDA",bx,-1-(st_lookup(var->attr.name,1)),bp,"get local address");
+          		emitRM("LDA",bx,-1-(st_lookup(var->attr.name,var->scope)),bp,"get local address");
         	}
         }
         break;
-    case 2:
-        if(var_lookup(var->attr.name,2)->isParam)
-        {
-        	 if(var->isArray){
-          		emitRM("LD",bx,2+(st_lookup(var->attr.name,2)),bp,"get param array address");
-       	 	}
-       		 else{
-          		emitRM("LDA",bx,2+(st_lookup(var->attr.name,2)),bp,"get param variable address");
-        	}
-        }
-        else
-        {
-        	if(var->isArray ){
-          		emitRM("LDA",bx,-(st_lookup(var->attr.name,2)),bp,"get local array address");
-        	}
-        	else{
-          		emitRM("LDA",bx,-1-(st_lookup(var->attr.name,2)),bp,"get local address");
-        	}
-        }
-        break;
+
   }
 }
 
@@ -164,9 +149,7 @@ static void genDec( TreeNode * tree)
               break;
     case VarK :
            /* if(TraceCode) emitComment("-> variable");
-             
-
-             emitGetAddr(tree);
+  	     emitGetAddr(tree);
 
              if(getValue){
               if(tree->isArray)
@@ -179,6 +162,8 @@ static void genDec( TreeNode * tree)
             */ 	
       break;
     case ArrayK :
+    
+       if(tree->isGlobal){
              if(TraceCode) emitComment("-> array element");
              p1 = tree->child[0];/*index expression*/
 
@@ -203,7 +188,7 @@ static void genDec( TreeNode * tree)
                 emitRM("LD",ax,0,bx,"get value of array element");
 
              if(TraceCode) emitComment("<- array element");
- 
+ 	}
             break; /* ArrayK */
 
      default:
@@ -221,7 +206,7 @@ static void genStmt( TreeNode * tree)
 { TreeNode * p1, * p2, * p3;
   BucketList fun;
   int savedLoc1,savedLoc2,currentLoc;
-  int loc;
+  //int loc;
   switch (tree->kind.stmt) {
 
       case IfK :
@@ -336,7 +321,7 @@ static void genStmt( TreeNode * tree)
 
 /* Procedure genExp generates code at an expression node */
 static void genExp( TreeNode * tree)
-{ int loc;
+{ //int loc;
   TreeNode * p1, * p2;
   switch (tree->kind.exp) {
 
@@ -370,7 +355,7 @@ static void genExp( TreeNode * tree)
     
     case IdK :
       if (TraceCode) emitComment("-> Id") ;
-      loc = st_lookup(tree->attr.name,tree->scope);
+      //loc = st_lookup(tree->attr.name,tree->scope);
       emitGetAddr(tree);
       
       if(getValue)
@@ -508,7 +493,7 @@ void codeGen(TreeNode * syntaxTree, char * codefile)
    /* generate standard prelude */
    emitComment("Standard prelude:");
    emitRM("LD",gp,0,zero,"load maxaddress from location 0");
-   emitRM("LDA",sp,0,gp,"copy gp to sp");
+   emitRM("LDA",sp,syntaxTree->kind.dec!=FunK?-(syntaxTree->param_size):0,gp,"copy gp to sp &allocating global variables(if any)");
    emitRM("ST",zero,0,zero,"clear location 0");
    emitComment("End of standard prelude.");
    
@@ -517,25 +502,27 @@ void codeGen(TreeNode * syntaxTree, char * codefile)
    int loc = emitSkip(6); /*A call consumes 5 instructions, and we need halt after main()*/
 
    /*defining Input & output fuction as if they were in-built(global) */
-   
-   if (TraceCode) emitComment("Begin input()");
+   /* if only necessary  i,e. if they are used in program */ 
    fun = fun_lookup("input",0);
+   if(fun!=NULL){
+   if (TraceCode) emitComment("Begin input()");
    fun->fun_start = emitSkip(0);
    emitRO("IN",ax,0,0,"read input into ax");
    emitRM("LDA",sp,1,sp,"pop prepare");
    emitRM("LD",pc,-1,sp,"pop return addr");
    if (TraceCode) emitComment("End input()");
+   }
    
-   if (TraceCode) emitComment("Begin output()");
    fun = fun_lookup("output",0);
+   if(fun!=NULL){
+   if (TraceCode) emitComment("Begin output()");
    fun->fun_start = emitSkip(0);
    emitRM("LD",ax,1,sp,"load param into ax");
    emitRO("OUT",ax,0,0,"output using ax");
    emitRM("LDA",sp,1,sp,"pop prepare");
    emitRM("LD",pc,-1,sp,"pop return addr");
    if (TraceCode) emitComment("End output()");
-   
-   
+   }
    
    
    

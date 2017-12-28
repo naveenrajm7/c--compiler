@@ -15,7 +15,7 @@ static int scope_a=0;
 /* counter for variable memory locations */
 static int location[MAX_SCOPE] = {0,0,0};
 
-
+static int No_change=0; 
 /* Procedure traverse is a generic recursive 
  * syntax tree traversal routine:
  * it applies preProc in preorder and postProc 
@@ -54,8 +54,20 @@ static void insertNode( TreeNode * t)
       switch (t->kind.stmt)
       {
         case CompoundK:
-        	scope_a=scope_a+1;
+                if(!No_change)
+        		scope_a=scope_a+1;
+        	else
+        		No_change=0;	
+        	HighScope=scope_a;
         	break;
+        case IfK:
+        	if((t->child[1])->kind.stmt==CompoundK)
+        		No_change=1;
+        	break;	
+        case WhileK:
+        	if((t->child[1])->kind.stmt==CompoundK)
+        		No_change=1;
+        	break;		
         case CallK:
            // printf("%d %s\n",t->param_size,t->attr.name);
            t->scope=0;
@@ -75,14 +87,22 @@ static void insertNode( TreeNode * t)
     case ExpK:
       switch (t->kind.exp)
       { case IdK:
-          t->scope=t->isParameter==1?scope_a+1:scope_a;
-          if (st_lookup(t->attr.name,t->isParameter==1?scope_a+1:scope_a) == -1)
-          /* not yet in table, so treat as new definition */
-            st_insert(t->attr.name,t->lineno,location[scope_a]++,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
-          else
-          /* already in table, so ignore location, 
-             add line number of use only */ 
-            st_insert(t->attr.name,t->lineno,0,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
+          if (st_lookup(t->attr.name,0) == -1)
+      		t->scope=t->isParameter==1?scope_a+1:scope_a;
+      	  else 
+      	        t->scope=0;
+          /* all identifiers must be declared before use execpt parameter so we insert just parameters to symbol table*/
+          if(t->isParameter==1)
+          {
+          	t->scope=t->isParameter==1?scope_a+1:scope_a;
+          	if (st_lookup(t->attr.name,t->isParameter==1?scope_a+1:scope_a) == -1)
+          	/* not yet in table, so treat as new definition */
+            	st_insert(t->attr.name,t->lineno,location[scope_a]++,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
+          	else
+          	/* already in table, so ignore location, 
+             	add line number of use only */ 
+            	st_insert(t->attr.name,t->lineno,0,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
+          } 	
           break;
           
         default:
@@ -102,14 +122,38 @@ static void insertNode( TreeNode * t)
             st_insert(t->attr.name,t->lineno,0,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
           break;
         case ArrayK:
-           t->scope=t->isParameter==1?scope_a+1:scope_a;
-           if (st_lookup(t->attr.name,t->isParameter==1?scope_a+1:scope_a) == -1)
-          /* not yet in table, so treat as new definition */
-            st_insert(t->attr.name,t->lineno,location[scope_a]++,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
-          else
-          /* already in table, so ignore location, 
-             add line number of use only */ 
-            st_insert(t->attr.name,t->lineno,0,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
+           if(t->isParameter)
+           {
+           	t->scope=scope_a+1;
+        	if (st_lookup(t->attr.name,scope_a+1) == -1)
+          	/* not yet in table, so treat as new definition */
+            	st_insert(t->attr.name,t->lineno,location[scope_a+1]++,scope_a+1,1);
+        	else
+          	/* already in table, so ignore location, 
+             	add line number of use only */ 
+            	st_insert(t->attr.name,t->lineno,0,scope_a+1,1);
+           }
+ 	   else       
+           {
+           	if (st_lookup(t->attr.name,0) == -1){
+      			t->scope=scope_a; /* if not in global */ 
+      		}
+      		else {
+      		        t->scope=0;		/* in global already do not insert to symbol*/
+      		   	break;
+      	   	}
+    
+                if (st_lookup(t->attr.name,scope_a) == -1){
+          	/* not yet in table, so treat as new definition */
+            	st_insert(t->attr.name,t->lineno,location[scope_a]++,scope_a,t->isParameter==1?1:0);
+            		if(t->isParameter!=1)
+            			location[scope_a]=location[scope_a]+(t->value-1);
+          	}
+          	else
+          	/* already in table, so ignore location, 
+          	   add line number of use only */ 
+          	  st_insert(t->attr.name,t->lineno,0,t->isParameter==1?scope_a+1:scope_a,t->isParameter==1?1:0);
+          }  
           break;
         case FunK:
             t->scope=0; /* to parse tree */
@@ -174,7 +218,15 @@ static void checkNode(TreeNode * t)
           break;
       }
       break;
-      
+    case DecK:
+      switch (t->kind.dec)
+      { case ArrayK:
+      		t->type=Integer;
+      		break;
+      	default:
+      	       break;
+      }	       	
+      break;  
     case StmtK:
       switch (t->kind.stmt)
       { case IfK:

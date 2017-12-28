@@ -2,7 +2,7 @@
 * File: sample.tm
 * Standard prelude:
   0:     LD  6,0(0) 	load maxaddress from location 0
-  1:    LDA  4,0(6) 	copy gp to sp
+  1:    LDA  4,0(6) 	copy gp to sp &allocating global variables(if any)
   2:     ST  0,0(0) 	clear location 0
 * End of standard prelude.
 * Jump to main()

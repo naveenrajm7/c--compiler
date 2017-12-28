@@ -1,0 +1,11 @@
+int x;
+/* x is global variable */
+void main(void)
+{
+	int y;
+	int z;
+	x=21;
+	y=input();
+	z=x+y;		//using global here
+	output(z);
+}

@@ -1,0 +1,9 @@
+int b[20];
+void main(void)
+{
+
+    int i;
+
+    b[2] =input();
+    output(b[2]);
+}

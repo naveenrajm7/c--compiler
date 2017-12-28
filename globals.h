@@ -22,6 +22,10 @@
 #define TRUE 1
 #endif
 
+/**************************************************/
+/********* Language tokens for scaning ************/
+/**************************************************/
+
 /* MAXRESERVED = the number of reserved words */
 #define MAXRESERVED 6
 
@@ -87,8 +91,12 @@ typedef struct treeNode
      ExpType type; /* for type checking of exps */
    } TreeNode;
 
+/**************************************************/
+/*********** Symantic Analyser scopes  ************/
+/**************************************************/
 
-#define MAX_SCOPE 3
+extern int HighScope;
+
 /**************************************************/
 /***********   Flags for tracing       ************/
 /**************************************************/
