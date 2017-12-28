@@ -23,21 +23,21 @@ void printToken( TokenType token, const char* tokenString )
       fprintf(listing,
          "reserved word: %s\n",tokenString);
       break;
-    case ASSIGN: fprintf(listing,"="); break;
-    case LT: fprintf(listing,"<"); break;
-    case EQ: fprintf(listing,"=="); break;
-    case LPAREN: fprintf(listing,"("); break;
-    case RPAREN: fprintf(listing,")"); break;
-    case SEMI: fprintf(listing,";"); break;
-    case PLUS: fprintf(listing,"+"); break;
-    case MINUS: fprintf(listing,"-"); break;
-    case TIMES: fprintf(listing,"*"); break;
-    case OVER: fprintf(listing,"/"); break;
-    case GT:fprintf(listing,">");break;
-    case LTE:fprintf(listing,"<=");break;
-    case GTE:fprintf(listing,">=");break;
-    case NE:fprintf(listing,"!=");break;
-    case LB:fprintf(listing,"[");break;
+    case ASSIGN: fprintf(listing,"=\n"); break;
+    case LT: fprintf(listing,"<\n"); break;
+    case EQ: fprintf(listing,"==\n"); break;
+    case LPAREN: fprintf(listing,"(\n"); break;
+    case RPAREN: fprintf(listing,")\n"); break;
+    case SEMI: fprintf(listing,";\n"); break;
+    case PLUS: fprintf(listing,"+\n"); break;
+    case MINUS: fprintf(listing,"-\n"); break;
+    case TIMES: fprintf(listing,"*\n"); break;
+    case OVER: fprintf(listing,"/\n"); break;
+    case GT:fprintf(listing,">\n");break;
+    case LTE:fprintf(listing,"<=\n");break;
+    case GTE:fprintf(listing,">=\n");break;
+    case NE:fprintf(listing,"!=\n");break;
+    case LB:fprintf(listing,"[\n");break;
     case RB:fprintf(listing,"]\n");break;
     case LF:fprintf(listing,"{\n");break;
     case RF:fprintf(listing,"}\n");break;
@@ -134,7 +134,7 @@ char * copyString(char * s)
 /* Variable indentno is used by printTree to
  * store current number of spaces to indent
  */
-static indentno = 0;
+static int indentno = 0;
 
 /* macros to increase/decrease indentation */
 #define INDENT indentno+=2
@@ -167,17 +167,17 @@ void printTree(TreeNode *tree)
             {
             case VarK:
                 fprintf(listing,"[Variable declaration \"%s\" of type \"%s\"]\n"
-			, tree->attr.name, tree->variableDataType==Integer?"Integer":"Void");
+			, tree->attr.name, tree->type==Integer?"Integer":"Void");
                 break;
             case ArrayK:
                 fprintf(listing, "[Array declaration \"%s\" of size %d"
                         " and type \"%s\"]\n",
-                      tree->attr.name, tree->value, tree->variableDataType==INT?"Integer":"Void");
+                      tree->attr.name, tree->value, tree->type==Integer?"Integer":"Void");
                 break;
             case FunK:
                 fprintf(listing, "[Function declaration \"%s()\""
                         " of return type \"%s\"]\n", 
-                        tree->attr.name, tree->variableDataType==INT?"Integer":"Void");
+                        tree->attr.name, tree->type==Integer?"Integer":"Void");
                 break;
             default:
                 fprintf(listing, "<<<unknown declaration type>>>\n");
@@ -191,7 +191,7 @@ void printTree(TreeNode *tree)
             case OpK:
                 fprintf(listing, "[Operator \"");
                 printToken(tree->attr.op, "");
-                fprintf(listing, "\"]\n");
+             // fprintf(listing, "\"]\n");
                 break;
             case IdK:
                 fprintf(listing, "[Identifier \"%s", tree->attr.name);
@@ -227,8 +227,8 @@ void printTree(TreeNode *tree)
                     fprintf(listing, "[RETURN statement]\n");
                     break;
                 case CallK:
-                    fprintf(listing, "[Call to function \"%s()\"]\n",
-                             tree->attr.name);
+                    fprintf(listing, "[Call to function \"%s() %d\"]\n",
+                             tree->attr.name,(tree->child[0])!=NULL?(tree->child[0])->param_size:0);
                     break;
 		default:
 		    fprintf(listing, "<<<unknown statement type>>>\n");

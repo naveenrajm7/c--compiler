@@ -1,7 +1,7 @@
 /****************************************************/
 /* File: main.c                                     */
-/* main file for  C-- compiler                      */
-/* C-- Compiler Project				    */
+/* main file for  C-  compiler                      */
+/* C- Compiler Project				    */
 /* ZEBRA 	                                    */
 /****************************************************/
 
@@ -10,7 +10,7 @@
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
 #define NO_PARSE FALSE
 /* set NO_ANALYZE to TRUE to get a parser-only compiler */
-#define NO_ANALYZE TRUE
+#define NO_ANALYZE FALSE
 
 /* set NO_CODE to TRUE to get a compiler that does not
  * generate code
@@ -29,7 +29,6 @@
 #endif
 #endif
 #endif
-
 /* allocate global variables */
 int lineno = 0;
 FILE * source;
@@ -40,12 +39,12 @@ FILE * code;
 int EchoSource = TRUE;
 int TraceScan = TRUE;
 int TraceParse = TRUE;
-int TraceAnalyze = FALSE;
-int TraceCode = FALSE;
+int TraceAnalyze = TRUE;
+int TraceCode = TRUE;
 
 int Error = FALSE;
 
-main( int argc, char * argv[] )
+int main( int argc, char * argv[] )
 { TreeNode * syntaxTree;
   char pgm[120]; /* source code file name */
   if (argc != 2)
@@ -61,7 +60,7 @@ main( int argc, char * argv[] )
     exit(1);
   }
   listing = stdout; /* send listing to screen */
-  fprintf(listing,"\nTINY COMPILATION: %s\n",pgm);
+  fprintf(listing,"\nC- COMPILATION: %s\n",pgm);
 #if NO_PARSE
   while (getToken()!=ENDFILE);
 #else
